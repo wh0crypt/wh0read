@@ -1,0 +1,10 @@
+{
+  "name": "wh0read",
+  "short_name": "wh0read",
+  "description": "Your synchronized PDF library",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0d12",
+  "theme_color": "#7c5cff",
+  "icons": []
+}
