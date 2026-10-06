@@ -46,6 +46,8 @@ The [`build-apk.yml`](./.github/workflows/build-apk.yml) workflow builds a debug
 
 Release versions are generated automatically from the major and minor values in `package.json` plus the GitHub Actions run number. For example, package version `0.1.0` and run `42` produce tag `v0.1.42`. The same value is written to the Android APK as its `versionName`, while the run number is used as its `versionCode`. GitHub automatically generates the release notes from the commits since the previous release. The versioned APK is attached directly to the release and is not kept as a workflow artifact.
 
+The workflow explicitly installs Android SDK platform 34, build-tools 34.0.0, and platform-tools. This avoids the obsolete SDK package name `tools`, which is no longer available in current GitHub-hosted runners.
+
 ## Offline storage
 
 The authentication session and theme preference are persisted locally. The reader uses short-lived signed URLs so private documents are not exposed. Full persistent PDF caching for offline reading is not implemented yet; it can be added later with Cache Storage or IndexedDB. Reading progress is written whenever the page changes and is available again when the application is opened with a connection.
