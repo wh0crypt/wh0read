@@ -29,7 +29,7 @@ The `NEXT_PUBLIC_*` values are not secrets. Document security is provided by the
 
 ## Web deployment
 
-On Vercel, use `npm run build` as the build command. The project uses `output: 'export'`, so the generated static site is written to `out/`. Configure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` as project environment variables.
+On Vercel, use `npm run build` as the build command. The project uses `output: 'export'`, so the generated static site is written to `out/`. Configure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` as project environment variables. Older projects can use `NEXT_PUBLIC_SUPABASE_ANON_KEY` instead.
 
 ## Android APK
 
@@ -42,7 +42,9 @@ npx cap sync android
 npx cap open android
 ```
 
-The [`build-apk.yml`](./.github/workflows/build-apk.yml) workflow builds a debug APK in GitHub Actions. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` as repository secrets. The generated artifact is available in the workflow run under the name `app-debug.apk`.
+The [`build-apk.yml`](./.github/workflows/build-apk.yml) workflow builds a debug APK and publishes it as a GitHub Release whenever `main` is updated, or when the workflow is manually dispatched. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` as repository secrets.
+
+Release versions are generated automatically from the major and minor values in `package.json` plus the GitHub Actions run number. For example, package version `0.1.0` and run `42` produce tag `v0.1.42`. The same value is written to the Android APK as its `versionName`, while the run number is used as its `versionCode`. GitHub automatically generates the release notes from the commits since the previous release. The versioned APK is attached directly to the release and is not kept as a workflow artifact.
 
 ## Offline storage
 

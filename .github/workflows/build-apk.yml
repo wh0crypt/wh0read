@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch: # Allows manual trigger from GitHub UI
 
+permissions:
+  contents: write
+
 jobs:
   build-android:
     name: Build APK
@@ -33,15 +36,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Calculate release version
+        id: version
+        run: |
+          BASE_VERSION=$(node -p "require('./package.json').version")
+          MAJOR_MINOR=$(node -e "const [major, minor] = process.argv[1].split('.'); console.log(\`\${major}.\${minor}\`)" "$BASE_VERSION")
+          VERSION="${MAJOR_MINOR}.${GITHUB_RUN_NUMBER}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Release version: $VERSION"
+
       - name: Build Next.js app (Static HTML Export)
         run: npm run build
         env:
           # Add your public env variables here if needed during build
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
 
       - name: Sync Capacitor project
-        run: npx cap sync android
+        run: |
+          if [ ! -d android ]; then
+            npx cap add android
+          fi
+          npx cap sync android
+
+      - name: Set Android app version
+        run: |
+          sed -i -E "s/versionCode [0-9]+/versionCode $GITHUB_RUN_NUMBER/; s/versionName \"[^\"]+\"/versionName \"${{ steps.version.outputs.version }}\"/" android/app/build.gradle
 
       - name: Build APK with Gradle
         working-directory: ./android
@@ -49,9 +70,14 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleDebug
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
+      - name: Rename APK with release version
+        run: mv android/app/build/outputs/apk/debug/app-debug.apk "android/app/build/outputs/apk/debug/wh0read-${{ steps.version.outputs.version }}.apk"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
         with:
-          name: app-debug.apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 7
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: wh0read ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          files: android/app/build/outputs/apk/debug/wh0read-${{ steps.version.outputs.version }}.apk

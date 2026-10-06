@@ -14,7 +14,7 @@ export function AuthForm() {
 
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setMessage('');
-    if (!isSupabaseConfigured) { setMessage('Configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to enable accounts.'); setBusy(false); return; }
+    if (!isSupabaseConfigured) { setMessage('Configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to enable accounts.'); setBusy(false); return; }
     const result = register ? await supabase.auth.signUp({ email, password }) : await supabase.auth.signInWithPassword({ email, password });
     if (result.error) setMessage(result.error.message);
     else if (register) setMessage('Account created. Check your email to confirm access.');
